@@ -126,7 +126,47 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setPubDate(article.getPubDate());
         dto.setPdf(article.getPdf());
         dto.setTags(article.getTags());
-        dto.setDomainName(article.getDomain().getName()); // Include domain name
+        dto.setDomainName(article.getDomain().getName());
+
+        // Add contributor info
+        dto.setContributorIds(article.getContributors().stream()
+                .map(User::getId)
+                .collect(Collectors.toSet()));
+
+        dto.setContributorNames(article.getContributors().stream()
+                .map(u -> u.getFname() + " " + u.getLname())
+                .collect(Collectors.toList()));
+
         return dto;
     }
+    @Override
+    public void assignModeratorToArticle(Long articleId, Long moderatorId) {
+        // Find the article with contributors loaded
+        Article article = articleRepository.findByIdWithContributors(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found with id: " + articleId));
+
+        // Find the user with role loaded
+        User moderator = userRepository.findByIdWithRole(moderatorId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + moderatorId));
+
+        // Verify the user is a moderator
+        if (!"MODERATOR".equals(moderator.getRole())) {
+            throw new RuntimeException("User with ID " + moderatorId + " is not a moderator");
+        }
+
+        // Check if already a contributor
+        if (article.getContributors().stream()
+                .anyMatch(c -> c.getId().equals(moderatorId))) {
+            throw new RuntimeException("User is already a contributor to this article");
+        }
+
+        // Add to contributors and save
+        article.getContributors().add(moderator);
+        articleRepository.save(article);
+
+        // If you have bidirectional relationship, also add:
+        // moderator.getContributedArticles().add(article);
+        // userRepository.save(moderator);
+    }
+
 }

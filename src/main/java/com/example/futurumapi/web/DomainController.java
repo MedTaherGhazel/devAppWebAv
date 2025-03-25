@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/domains")
+@CrossOrigin(origins = "http://localhost:4200")
 public class DomainController {
 
     private final DomainService domainService;
