@@ -13,4 +13,5 @@ public interface ArticleService {
     List<ArticleDTO> searchArticlesByKeyword(String keyword);
     void assignArticleToDomain(Long articleId, List<String> domainNames);
     boolean deleteArticle(Long id);
+    void assignModeratorToArticle(Long articleId, Long moderatorId);
 }

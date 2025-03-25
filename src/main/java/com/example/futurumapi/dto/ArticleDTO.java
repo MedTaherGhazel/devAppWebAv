@@ -16,4 +16,5 @@ public class ArticleDTO {
     private List<String> tags;
     private String domainName;
     private Set<Long> contributorIds;
+    private List<String> contributorNames;
 }

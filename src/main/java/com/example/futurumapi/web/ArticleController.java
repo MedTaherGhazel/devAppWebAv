@@ -2,14 +2,17 @@ package com.example.futurumapi.web;
 
 import com.example.futurumapi.dto.ArticleDTO;
 import com.example.futurumapi.services.Article.ArticleService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/articles")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ArticleController {
 
     private final ArticleService articleService;
@@ -63,5 +66,23 @@ public class ArticleController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+    @PutMapping("/{articleId}/assign-moderator/{moderatorId}")
+    public ResponseEntity<?> assignModeratorToArticle(
+            @PathVariable Long articleId,
+            @PathVariable Long moderatorId) {
+        try {
+            articleService.assignModeratorToArticle(articleId, moderatorId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Moderator successfully assigned as contributor"
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "success", false,
+                            "error", e.getMessage()
+                    ));
+        }
     }
 }
