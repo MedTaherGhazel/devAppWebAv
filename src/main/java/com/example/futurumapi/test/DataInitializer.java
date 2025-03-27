@@ -7,7 +7,9 @@ import com.example.futurumapi.entities.User;
 import com.example.futurumapi.repositories.ArticleRepository;
 import com.example.futurumapi.repositories.DomainRepository;
 import com.example.futurumapi.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -19,7 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ArticleRepository articleRepository;
     private final DomainRepository domainRepository;
-
+    private PasswordEncoder passwordEncoder;
     public DataInitializer(UserRepository userRepository,
                            ArticleRepository articleRepository,
                            DomainRepository domainRepository) {
@@ -49,7 +51,7 @@ public class DataInitializer implements CommandLineRunner {
         adminUser.setFname("Admin");
         adminUser.setLname("User");
         adminUser.setEmail("admin@example.com");
-        adminUser.setPassword("admin123");
+        adminUser.setPassword(passwordEncoder.encode("Password@123"));
         adminUser.setUsername("admin");
         adminUser.setRole(Role.ADMIN);
 
@@ -57,7 +59,7 @@ public class DataInitializer implements CommandLineRunner {
         moderatorUser.setFname("Moderator");
         moderatorUser.setLname("User");
         moderatorUser.setEmail("moderator@example.com");
-        moderatorUser.setPassword("moderator123");
+        moderatorUser.setPassword(passwordEncoder.encode("Password@123"));
         moderatorUser.setUsername("moderator");
         moderatorUser.setRole(Role.MODERATOR);
 
@@ -65,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
         regularUser.setFname("Regular");
         regularUser.setLname("User");
         regularUser.setEmail("user@example.com");
-        regularUser.setPassword("user123");
+        regularUser.setPassword(passwordEncoder.encode("Password@123"));
         regularUser.setUsername("user");
         regularUser.setRole(Role.USER);
 
