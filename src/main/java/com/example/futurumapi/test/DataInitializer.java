@@ -21,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ArticleRepository articleRepository;
     private final DomainRepository domainRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     public DataInitializer(UserRepository userRepository,
                            ArticleRepository articleRepository,
