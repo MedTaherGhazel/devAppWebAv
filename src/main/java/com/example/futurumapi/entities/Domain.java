@@ -1,6 +1,8 @@
 package com.example.futurumapi.entities;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,5 +28,10 @@ public class Domain {
     private String name;
 
     @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Article> articles;
+    @JsonCreator
+    public Domain(@JsonProperty("name") String name) {
+        this.name = name;
+    }
 }

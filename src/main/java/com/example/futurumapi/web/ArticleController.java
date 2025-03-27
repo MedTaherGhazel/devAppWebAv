@@ -1,12 +1,14 @@
 package com.example.futurumapi.web;
 
 import com.example.futurumapi.dto.ArticleDTO;
+import com.example.futurumapi.entities.User;
 import com.example.futurumapi.services.Article.ArticleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -63,5 +65,34 @@ public class ArticleController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+    //assign article to user
+    @PostMapping("/{articleId}/assign-moderator/{userId}")
+    public ResponseEntity<?> assignModerator(
+            @PathVariable Long articleId,
+            @PathVariable Long userId) {
+        try {
+            articleService.assignModeratorToArticle(articleId, userId);
+            return ResponseEntity.ok("Moderator assigned successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{articleId}/moderators")
+    public ResponseEntity<Set<User>> getArticleModerators(@PathVariable Long articleId) {
+        return ResponseEntity.ok(articleService.getArticleModerators(articleId));
+    }
+
+    @DeleteMapping("/{articleId}/remove-moderator/{userId}")
+    public ResponseEntity<?> removeModerator(
+            @PathVariable Long articleId,
+            @PathVariable Long userId) {
+        try {
+            articleService.removeModeratorFromArticle(articleId, userId);
+            return ResponseEntity.ok("Moderator removed successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

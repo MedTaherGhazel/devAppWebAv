@@ -1,79 +1,99 @@
 package com.example.futurumapi.web;
 
+import com.example.futurumapi.dto.UserRegistrationDto;
 import com.example.futurumapi.entities.Role;
 import com.example.futurumapi.entities.User;
 import com.example.futurumapi.repositories.UserRepository;
-import com.example.futurumapi.security.CustomUserDetails;
-import com.example.futurumapi.security.jwt.JwtTokenUtil;
 import com.example.futurumapi.security.requests.AuthRequest;
 import com.example.futurumapi.security.responses.AuthResponse;
+import com.example.futurumapi.services.Auth.AuthService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenUtil jwtTokenUtil;
-    private final UserRepository userRepository;
+    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil,
-                          UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDto registrationDto,
+                                          BindingResult bindingResult) {
 
-    @PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body("Email is already in use!");
+        // Handle validation errors first
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error -> {
+                errors.put(error.getField(), error.getDefaultMessage());
+            });
+            return ResponseEntity.badRequest().body(errors);
         }
 
-        // Set a default role (e.g., ROLE_USER)
-        user.setRole(Role.USER); // Ensure Role.USER is defined in your Role enum
+        // Then check business rules
+        if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", "Passwords do not match")
+            );
+        }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully!");
+        if (userRepository.existsByEmail(registrationDto.getEmail())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", "Email already in use")
+            );
+        }
+
+        if (userRepository.existsByUsername(registrationDto.getUsername())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", "Username already taken")
+            );
+        }
+
+        User user = new User();
+        user.setFname(registrationDto.getFname());
+        user.setLname(registrationDto.getLname());
+        user.setEmail(registrationDto.getEmail());
+        user.setUsername(registrationDto.getUsername());
+        user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
+        user.setRole(Role.USER);
+
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest,
+                                   BindingResult bindingResult) {
+        // Handle validation errors
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error -> {
+                errors.put(error.getField(), error.getDefaultMessage());
+            });
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        try {
+            AuthResponse response = authService.login(authRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid credentials"));
+        }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
-        // Authenticate the user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
-
-        // Set the authentication in the SecurityContext
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Fetch the user details
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userDetails.getUser();
-
-        // Generate the JWT token
-        final String jwt = jwtTokenUtil.generateToken(userDetails);
-
-        // Return the token and user details
-        return ResponseEntity.ok(new AuthResponse(
-                jwt,
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                user.getFname(),
-                user.getLname(),
-                user.getRole().name() // Assuming role is an enum
-        ));
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmailAvailability(
+            @RequestParam String email) {
+        return ResponseEntity.ok(Map.of("available", authService.isEmailAvailable(email)));
     }
 }

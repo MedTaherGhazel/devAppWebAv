@@ -2,10 +2,12 @@ package com.example.futurumapi.services.Domain;
 
 import com.example.futurumapi.dao.DomainDAO;
 import com.example.futurumapi.dto.DomainDTO;
+import com.example.futurumapi.entities.Article;
 import com.example.futurumapi.entities.Domain;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,14 +38,6 @@ public class DomainServiceImpl implements DomainService {
     }
 
     @Override
-    public DomainDTO createDomain(DomainDTO domainDTO) {
-        Domain domain = new Domain();
-        domain.setName(domainDTO.getName());
-        Domain savedDomain = domainDAO.save(domain);
-        return convertToDTO(savedDomain);
-    }
-
-    @Override
     public Optional<DomainDTO> updateDomain(Long id, DomainDTO domainDTO) {
         Optional<Domain> existingDomain = domainDAO.findById(id);
         if (existingDomain.isPresent()) {
@@ -64,11 +58,29 @@ public class DomainServiceImpl implements DomainService {
         return false;
     }
 
+    @Override
+    public DomainDTO createDomain(Domain domain) {
+        Domain newDomain = new Domain();
+        newDomain.setName(domain.getName());
+        // Add other fields if needed
+        Domain savedDomain = domainDAO.save(newDomain);
+        return convertToDTO(savedDomain);
+    }
+
     private DomainDTO convertToDTO(Domain domain) {
         DomainDTO dto = new DomainDTO();
         dto.setId(domain.getId());
         dto.setName(domain.getName());
-        dto.setArticleIds(domain.getArticles().stream().map(article -> article.getId()).collect(Collectors.toList()));
+
+        // Safe handling of articles
+        if (domain.getArticles() != null) {
+            dto.setArticleIds(domain.getArticles().stream()
+                    .map(Article::getId)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setArticleIds(Collections.emptyList());
+        }
+
         return dto;
     }
 }

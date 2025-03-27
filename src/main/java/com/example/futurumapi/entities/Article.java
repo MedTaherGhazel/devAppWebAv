@@ -42,6 +42,6 @@ public class Article {
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    @JsonIgnore // Prevents infinite recursion
+    @JsonIgnore
     private Set<User> contributors = new HashSet<>();
 }

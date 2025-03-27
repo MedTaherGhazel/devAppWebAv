@@ -5,11 +5,11 @@ import com.example.futurumapi.dao.ArticleDAO;
 import com.example.futurumapi.dto.ArticleDTO;
 import com.example.futurumapi.entities.Article;
 import com.example.futurumapi.entities.Domain;
+import com.example.futurumapi.entities.Role;
 import com.example.futurumapi.entities.User;
 import com.example.futurumapi.repositories.ArticleRepository;
 import com.example.futurumapi.repositories.DomainRepository;
 import com.example.futurumapi.repositories.UserRepository;
-import com.example.futurumapi.services.User.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -128,5 +128,41 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setTags(article.getTags());
         dto.setDomainName(article.getDomain().getName()); // Include domain name
         return dto;
+    }
+
+
+    @Override
+    public void assignModeratorToArticle(Long articleId, Long moderatorId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        User moderator = userRepository.findById(moderatorId)
+                .filter(user -> user.getRole() == Role.MODERATOR)
+                .orElseThrow(() -> new RuntimeException("User not found or not a moderator"));
+
+        // Add as contributor (which will serve as moderator)
+        article.getContributors().add(moderator);
+        articleRepository.save(article);
+    }
+
+    @Override
+    public void removeModeratorFromArticle(Long articleId, Long moderatorId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        User moderator = userRepository.findById(moderatorId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        article.getContributors().remove(moderator);
+        articleRepository.save(article);
+    }
+
+    @Override
+    public Set<User> getArticleModerators(Long articleId) {
+        return articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"))
+                .getContributors().stream()
+                .filter(user -> user.getRole() == Role.MODERATOR)
+                .collect(Collectors.toSet());
     }
 }

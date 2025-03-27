@@ -12,8 +12,8 @@ import lombok.Setter;
 public class AuthResponse {
     private String token;
     private Long id;
-    private String username;
     private String email;
+    private String username;
     private String fname;
     private String lname;
     private String role;
