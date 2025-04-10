@@ -1,8 +1,11 @@
 package com.example.futurumapi.web;
 
 import com.example.futurumapi.dto.ArticleDTO;
+import com.example.futurumapi.entities.Article;
 import com.example.futurumapi.entities.User;
 import com.example.futurumapi.services.Article.ArticleService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +15,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/articles")
+@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*")
 public class ArticleController {
 
     private final ArticleService articleService;
@@ -95,4 +99,24 @@ public class ArticleController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
+
+    @GetMapping("/moderator/{moderatorId}")
+    public ResponseEntity<?> getArticlesForModerator(@PathVariable Long moderatorId) {
+        try {
+            List<ArticleDTO> articles = articleService.getArticlesForModerator(moderatorId);
+
+            if (articles.isEmpty()) {
+                return ResponseEntity.status(404).body("You don't have any articles yet.");
+            }
+
+            return ResponseEntity.ok(articles);
+        } catch (RuntimeException e) {
+            // Log the exception
+            log.error("Error fetching articles for moderator with ID: {}", moderatorId, e);
+            return ResponseEntity.status(500).body("An error occurred while fetching the articles.");
+        }
+    }
+
+
 }

@@ -44,7 +44,7 @@ public class User {
     private Role role;
 
     @ManyToMany(mappedBy = "contributors")
-    @JsonIgnore // Prevents infinite recursion
+    @JsonIgnore
     private Set<Article> contributedArticles = new HashSet<>();
 
 }

@@ -2,6 +2,7 @@ package com.example.futurumapi.dao;
 
 import com.example.futurumapi.dto.ArticleDTO;
 import com.example.futurumapi.entities.Article;
+import com.example.futurumapi.entities.User;
 import com.example.futurumapi.repositories.ArticleRepository;
 import org.springframework.stereotype.Component;
 
@@ -52,7 +53,7 @@ public class ArticleDAO {
         dto.setPdf(article.getPdf());
         dto.setTags(article.getTags());
         dto.setDomainName(article.getDomain().getName());
-        dto.setContributorIds(article.getContributors().stream().map(user -> user.getId()).collect(Collectors.toSet()));
+        dto.setContributorIds(article.getContributors().stream().map(User::getId).collect(Collectors.toSet()));
         return dto;
     }
 }

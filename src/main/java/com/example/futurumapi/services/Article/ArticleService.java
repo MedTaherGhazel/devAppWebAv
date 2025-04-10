@@ -21,4 +21,6 @@ public interface ArticleService {
     void removeModeratorFromArticle(Long articleId, Long moderatorId);
 
     Set<User> getArticleModerators(Long articleId);
+    List<ArticleDTO> getArticlesForModerator(Long moderatorId);
+
 }

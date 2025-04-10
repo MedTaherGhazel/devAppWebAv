@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -47,7 +49,7 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         try {
             userService.deleteUser(userId);
-            return ResponseEntity.ok("User deleted successfully");
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -58,7 +60,7 @@ public class UserController {
                                             @RequestParam String role) {
         try {
             userService.updateUserRole(userId, role);
-            return ResponseEntity.ok("User role updated successfully");
+            return ResponseEntity.ok(Map.of("message","User role updated successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

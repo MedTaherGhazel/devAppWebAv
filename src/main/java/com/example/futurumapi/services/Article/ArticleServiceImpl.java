@@ -156,7 +156,23 @@ public class ArticleServiceImpl implements ArticleService {
         article.getContributors().remove(moderator);
         articleRepository.save(article);
     }
+    @Override
+    public List<ArticleDTO> getArticlesForModerator(Long moderatorId) {
+        // Fetch the user by moderatorId
+        User moderator = userRepository.findById(moderatorId)
+                .filter(user -> user.getRole() == Role.MODERATOR)
+                .orElseThrow(() -> new RuntimeException("User not found or not a moderator"));
 
+        // Get articles where this user is a contributor
+        List<Article> articles = articleRepository.findAll().stream()
+                .filter(article -> article.getContributors().contains(moderator))
+                .collect(Collectors.toList());
+
+        // Convert articles to ArticleDTOs
+        return articles.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
     @Override
     public Set<User> getArticleModerators(Long articleId) {
         return articleRepository.findById(articleId)
